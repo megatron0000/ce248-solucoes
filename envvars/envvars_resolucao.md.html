@@ -1,0 +1,54 @@
+# Lab 2: Variáveis de ambiente
+
+[Link para perguntas](https://docs.wixstatic.com/ugd/ff94d5_d0dced73b852442fb6df247a85a6186c.pdf)
+
+## 2.1
+
+Variáveis de ambiente são uma característica de qualquer processo. Já variáveis de shell são característica somente de processos shell, e são obtidas quando o tal processo faz uma *cópia* das variáveis de ambiente (que ele naturalmente possui, já que é um processo) e adiciona a elas outras variáveis definidas pelo usuário enquanto usa o shell. Na condição de cópias, as variáveis de shell são completamente independentes das variáveis de ambiente de onde saíram.
+
+Talvez a confusão surja do fato de que, quando um shell cria um subprocesso de si, ele define as variáveis de ambiente do filho não como iguais às suas variáveis de ambiente, mas como iguais às suas variáveis de shell (mais precisamente, somente a porção exportada de suas variáveis de shell).
+
+## 2.2
+
+Não muda. Como dito na questão anterior, as variáveis de shell são independentes (i.e. não afetam em nenhum sentido) as variáveis de ambiente das quais foram originadas.
+
+## 2.3
+
+Na primeira situação, como *env* é executado num processo filho do shell, e como um shell passa - como variáveis de ambiente do filho - suas variáveis de shell (mais detalhes na resposta à questão 2.1), veremos uma lista das variáveis do shell corrente (na verdade, somente das exportadas)
+
+Na segunda situação, vamos diretamente ao sistema operacional consultar as variáveis de ambiente do shell corrente.
+
+## 2.4
+
+Nenhuma variável de ambiente
+
+## 2.5
+
+Não está correto. Afinal, mesmo que ele não use diretamente, as funções de biblioteca que ele emprega podem usar.
+
+## 2.6
+
+A função *system()*, segundo o [manual do Linux](http://man7.org/linux/man-pages/man3/system.3.html), executa:
+
+1. *fork()*. Por isso, o subprocesso (denominaremos "filho") recebe cópia das variáveis de ambiente do processo corrente.
+2. No filho, *execl("/bin/sh", argumentos...)*. Por sua vez, *execl()* faz:
+	1. *execve("/bin/sh", argumentos, environ)*, que tem por efeito substituir a imagem de código pela de */bin/sh* e as variáveis de ambiente pelas que já estão no filho (como passado pelo argumento *environ*).
+	2. O código de */bin/sh* é executado. Pelo comportamento de um shell, ele cria outro subprocesso (o "neto") para executar o comando passado como argumento, e (também como é normal de um shell) passa para o neto suas variáveis de shell (entre elas a *PATH*) como variáveis de ambiente do neto.
+
+## 2.7
+
+*getenv()* retorna um ponteiro ao valor de uma variável de ambiente pedida. O tamanho da string resultante, porém, pode ser grande demais para o uso de um certo programa. Por outro lado, *secure_getenv()*, ao perceber uma situação perigosa (como RUID diferente de EUID), sempre retornará *NULL*, impedindo ataques (por exemplo) de buffer overflow.
+
+## 2.8
+
+Exatamente pelo motivo trabalhado na questão anterior, é preferível *getcwd()* a ler variável de ambiente (que pode ter sido corrompida por um atacante).
+
+## 2.9
+
+*LD_AUDIT* especifica executáveis que serão chamados pelo linker. Se não forem ignorados num programa setuid, podem ser usados por um atacante para executar código arbitrário com permissão de *root*.
+
+*LD_DEBUG_OUTPUT* especifica um arquivo a ser aberto para escrita de logs de debug do linker. Caso o programa seja setuid, essa variável pode ser direcionada a um arquivo sensível (que será aberto, já que o EUID é 0), gerando um *capability leaking* potencial.
+
+## 2.10
+
+Reza a lenda que variáveis de ambiente de *daemons* podem ser confiadas, isto é, *daemons* têm pelo menos uma superfície de ataque a menos do que programas setuid.

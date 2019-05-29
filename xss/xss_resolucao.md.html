@@ -1,0 +1,55 @@
+	Lab XSS
+
+# 1
+
+O código só precisa montar um pedido GET contendo o parâmetro *pageid=5*.
+
+# 2
+
+Análogo ao anterior, mas com *POST*.
+
+# 3
+
+Sem teste, o código será executado quando Samy visualizar seu próprio perfil. Assim sendo, o código
+modificará o perfil, configurando-o para o valor do atacante. O código que estava no perfil, porém,
+terá desaparecido (portanto nenhum outro usuário será afetado).
+
+No caso do *add-friend*, o código não "se destruiria", então não há problema em permitir que ele execute
+mesmo para o próprio Samy (de fato, a execução fará Samy inutilmente adicionar a si mesmo como amigo).
+
+# 4
+
+Não, afinal um atacante não precisa usar o navegador para inserir seu código malicioso. Ele só precisa iniciar
+um pedido HTTP ao servidor, adequadamente configurado.
+
+Caso seja difícil conseguir os valores corretos de tokens secretos, o atacante pode usar o *debugger* do 
+navegador para desabilitar seletivamente partes da lógica de sanitização implementada pelos desenvolvedores
+do site.
+
+# 5
+
+XSS: código executa na própria página do site afetado.
+CSRF: pedido HTTP é enviado de fora da página do site vulnerável.
+
+# 6
+
+Não. Como o código será executado de dentro do próprio site afetado, ele (o código) terá acesso a qualquer 
+informação disponível no contexto do site (o que inclui os valores dos tokens secretos).
+
+# 7
+
+Também não. Para começo de conversa, XSS nem depende de pedidos HTTP feitos a partir de sites externos.
+
+Pelo contrário, os pedidos são feitos no interior do próprio site vulnerável.
+
+# 8
+
+Não funcionaria. Exemplo de trecho de código que enganaria esse tipo de contramedida:
+
+```js
+<<script>script> alert('I will be executed !'); </</script>script>
+```
+
+# 9, 10, 11
+
+Desnecessárias

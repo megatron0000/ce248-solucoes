@@ -1,0 +1,78 @@
+		**Lab 4: Buffer Overflow**
+
+
+# Link para as perguntas
+
+[](https://docs.wixstatic.com/ugd/ff94d5_2b4915e787d449ce83511782292dc24d.pdf)
+
+# Problema 4.1
+
+**a** é guardado na stack; **x** também (em endereços inferiores a **a**, já que **x** é variável local); **y**, por ser uma variável estática não-inicializada, será posto no segmento BSS.
+
+# Problema 4.2
+
+Variável | Segmento
+-- | --
+i | Dados (ou BSS, a depender do compilador - porque, apesar de ter sido inicializada, o valor foi 0)
+str | Stack (pois é argumento de função)
+ptr | Stack (pois é variável local). *nota: Claro que haverá alocação no Heap, mas não será de ptr propriamente dito, e sim de seu conteúdo*
+buf | Stack (diferentemente de ptr, o conteúdo de buf irá para a Stack)
+j | Stack (pois é variável local)
+
+# Problema 4.3
+
+|stack da função que chamou **bof**|
+|---|
+|**str**|
+|endereço para o qual a execução retornará após completar **bof**|
+|ponteiro para a base do frame anterior (a base é 4 endereços de memória abaixo de onde fica o endereço de retorno, supondo que 1 endereço de memória contenha 1 byte de conteúdo)|
+|buffer: 24 bytes|
+
+# Problema 4.4
+
+De fato, não me parece que será mais possível sobrescrever o endereço de retorno associado à função que contém o buffer como variável local. 
+
+Por outro lado, suponhamos que esse buffer esteja sendo preenchido por uma função como **strcpy()**, que, pelo *layout* sugerido para a stack, estará alocada *acima* do buffer. Assim sendo, poderemos sobrescrever o endereço de retorno de **memcpy** ! O *exploit*, apesar de modificado, ainda é útil.
+
+# Problema 4.5
+
+Isso é falso, porque o *stack frame* da *strcpy* está localizado abaixo do buffer, de maneira que o overflow causa alteração do endereço de retorno de *foo* (não de *strcpy*). 
+
+De fato, *strcpy* retorna normalmente, momento em que *foo* tem sua execução resumida. Mais tarde, quando *foo* retornar, usará como endereço de retorno nosso valor injetado, e é aí que ocorre o ataque.
+
+# Problema 4.6
+
+A princípio, o *size* pode ser tão grande que, mesmo *buffer* sendo alocada no *heap*, a quantidade de bytes alocada é tão grande que invade o *stack*, e o problema original persiste.
+
+# Problema 4.7
+
+**Não entendi onde está esse *exploit.c*. Seria no livro-texto ?**
+
+# Problema 4.8
+
+Os casos de falha são aqueles em que se tentou colocar, como endereço de retorno, um valor contendo um ou mais bytes nulos... a função *strcpy* finaliza ao encontrar byte nulo, então o *badfile* não foi copiado inteiramente para a memória.
+
+# Problema 4.9
+
+Como há 64 bytes de distância, começamos o *badfile* com 64 bytes de qualquer coisa (a não ser byte nulo).
+
+Depois, para saltar a um endereço que não tenha byte nulo no meio, objetivamos o endereço 0xAABB0101, cuja distância ao endereço do *return address* é 97. Pulando mais essa quantidade de bytes (possivelmente os preenchendo com instruções NOP), colocaremos nosso código logo após.
+
+# Problema 4.10
+
+No endereço de *p->pre*, armazenamos 0xBBFFAACC; no endereço de *p->next*, armazenamos o endereço de início de nosso shellcode (algum endereço conveniente dentro do heap, entre o *buffer* e *p*).
+
+A linha **(1)** fará *q* apontar para o endereço de retorno; a linha **(2)** fará a substituição do que estiver lá pelo nosso novo endereço de retorno; e a linha **(3)** pulará para nosso código, iniciando a execução do código malicioso.
+
+# Problema 4.11
+
+Tudo se mantém praticamente igual, a não ser pelo fato de que, agora, devemos armazenar no endereço de *p->pre* o valor **0xBBFFAACC** decrementado de **4** (para levar em conta o espaço adicional ocupado pelo **int value**)
+
+# Problema 4.12
+
+ASLR impede executar um *debugger* para encontrar o endereço absoluto de qualquer estrutura da stack (como a localização do campo *return address* que queremos sobrescrever).
+
+# Problema 4.13
+
+O *shellcode* mencionado usou o valor do registrador *stack pointer*, que já é o endereço desejado... assim, foi possível só mencionar *esp* em vez do endereço propriamente dito.
+

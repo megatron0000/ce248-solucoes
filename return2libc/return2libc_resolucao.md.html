@@ -1,0 +1,55 @@
+        **Lab 5: Return to libc**
+
+
+# Link para as perguntas
+
+[](https://docs.wixstatic.com/ugd/ff94d5_e99d977ef49a478c99d4047f0bc6417d.pdf)
+
+# Problema 5.1
+
+**Não sei como funciona**
+
+# Problema 5.2
+
+Não importa. Quando o endereço de retorno alterado for usado para pular à função-alvo da libc, o prólogo dela começará por dar um *push* do *ebp* para a *stack* (armazenando na *stack* o "valor arbitrário" que estava no *ebp*), e então fará o *ebp* apontar para *esp*, que está no local correto. Por isso não haverá problema.
+
+# Problema 5.3
+
+(*checar folha avulsa, caso esqueça o diagrama*)
+
+1. Determine o endereço de *execve*. Chamaremos de *x* a esse endereço.
+2. Determine o endereço do *return address* a ser alterado. Chamaremos de *y* a esse endereço.
+3. Crie variável de ambiente contendo o valor */bin//sh* e determine seu endereço quando um programa arbitrário é executado (o nome do binário desse programa deve ter o mesmo comprimento do nome do binário-vítima). Chamaremos de *w* a esse endereço.
+4. Ao criar o *badfile*, logo depois de escrever *y*, faça:
+  1. Pule 4 bytes
+  2. Escreva *y + 28* (esse valor tem 4 bytes de comprimento)
+  3. Escreva *y + 20* (esse valor tem 4 bytes de comprimento)
+  4. Escreva 4 bytes nulos (4 vezes o byte 0)
+  5. Escreva *y + 28* (esse valor tem 4 bytes de comprimento)
+  6. Escreva 4 bytes nulos (4 vezes o byte 0)
+  7. Escreva a string desejada (*/bin//sh*, o que ocupa 8 bytes)
+  8. Escreva o byte 0 (1 só vez)
+
+# Problema 5.4
+
+**Não sei**
+
+# Problema 5.5
+
+Basta preparar a *stack* transladada 4 bytes para cima. Ou seja, para todo dado que era escrito num certo endereço *x* na *stack*, agora ele deverá ser escrito no endereço *x + 4*.
+
+> Pensando bem, parece que não, porque o `ebp` estará com um valor maluco na `system()` (já que seu prólog - que consertava o `ebp`, foi pulado)
+
+# Problema 5.6
+
+Sim, já que ASLR dificultará acertar o endereço de *system()* ou qualquer outra função para a qual se deseje pular.
+
+# Problema 5.7
+
+Toda vez que um processo é iniciado, o endereço do início de qualquer *shared library* é mapeado para um endereço (memória virtual) diferente. 
+
+Nesse sentido, é verdade que o endereço de uma função qualquer dentro da biblioteca será randomizado. Por outro lado, o *offset* da tal função em relação ao início da biblioteca é fixo.
+
+# Problema 5.8
+
+Na *stack*, logo acima de 0xAABB1180, escreva os outros 2 endereços.

@@ -1,0 +1,65 @@
+	Lab CSRF
+
+# 1
+
+O ataque CSRF se baseia no fato de o *browser* enviar cookies mesmo quando o pedido é *cross-site*.
+
+Se o *cookie* do site tiver sido criado com *SameSite=Strict*, o browser não o enviará se o pedido for
+*cross-site* (se for *SameSite=Lax* só enviará quando em navegação *top-level*).
+
+# 2
+
+A ideia é que a página do site deve enviar o token secreto de volta ao servidor junto com o pedido HTTP (anexado à URL ou ao corpo do pedido). Como é preciso ler o valor do token (em javascript) para fazer isso, e a política de *same origin* dos browsers não permite a um site ler cookies de outros (em javascript), é impossível que um site externo (o site malicioso) construa o pedido corretamente.
+
+# 3
+
+Sim, porque o pedido gerado pelo site externo (malicioso) poderia ser HTTPS legitimamente. 
+
+Mais concretamente, o ataque não se baseia em *interceptação* da comunicação cliente-servidor nem em qualquer forma de captura dos dados que são gerados por ela (que são protegidos pelo protocolo HTTPS).
+
+# 4
+
+```html
+<img src="http://www.example.com/delete.php?pageid=5">
+```
+
+# 5
+
+Construa um elemento *form* com **<input name="pageid" value="5">** dentro de uma **form** e a submeta.
+
+# 6
+
+Se o ID pode ser descoberto pela página do usuário, o atacante pode realizar o *exploit* em dois passos: 
+Primeiro, manda um pedido requisitando a página do usuário e processa o resultado para encontrar o ID; 
+segundo, realiza o pedido intencionado, já tendo em mãos o ID necessário
+
+# 7
+
+Sim, afinal são os navegadores que realizam o pedido HTTP.
+
+# 8
+
+Depende. Se o *header* *referer* estiver corretamente configurado, ou o servidor tiver defesas contra *CSRF*,
+será possível ao servidor distinguir pedidos *same-site* de pedidos *cross-site*.
+
+# 9
+
+Porque essa informação pode não ser corretamente populada pelo navegador (*browser*).
+
+# 10
+
+Porque, se ele não souber, pode se tornar vítima do ataque que é tema deste lab: CSRF. Concretamente,
+ele pode acabar permitindo que sites externos tomem ações no papel de um usuário *logado*, sem a intenção
+deste usuário.
+
+# 11
+
+O servidor pode: basta o servidor responder com um *HTTP header* configurado *SameSite=Strict* (ou,
+dependendo da necessidade, *SameSite=Lax*).
+
+# 12
+
+O *iframe* tem seu contexto próprio. O pedido não é considerado *cross-site*.
+
+A segurança deste caso advém da política de *same-origin* implementada pelos navegadores: eles não permitem
+que um site acesse o contexto de *iframe*s presentes na página.
